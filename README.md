@@ -1,7 +1,8 @@
 # HawaiiInformationServiceSearch
-A better search app for HawaiiInformationService (AlohaLiving)
+An unofficial API for the HawaiiInformationService Real Estate Listings (a.k.a. AlohaLiving)
 
 External Libraries/Services Used:
+
     *ChromePHP (debugging)
     *Import.io (Web Scraper for data from HawaiiInformation)
 
