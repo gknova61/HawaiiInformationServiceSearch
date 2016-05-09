@@ -106,10 +106,8 @@ if (mysqli_connect_errno())
 }
 
 $realUrl = createSearchUrl('real',1,3,'',0,999999999999,0,0);
-
 $first_page_data = fetchCacheUrl($realUrl,'search');
 $total_pages = intval($first_page_data->extractorData->data[0]->group[0]->{'Amount of Pages'}[0]->text);
-var_dump($total_pages);
 
 for($i = 1; $i <= $total_pages; $i++) {
     $page_number = $i;
