@@ -11,12 +11,14 @@ require_once("config/dbInfo.php");
 require_once("libs/phputils/php/phputils.class.php");
 require_once('libs/chromephp/php/chromephp.php');
 
+set_time_limit(0); //This is a long script, usually takes ~10min depending on database size of HIIS
+
 function createSearchUrl($realOrBase,$pageNumber,$islandNumber,$district) {
     global $config_importio_hiis_GUID_search;
     global $config_importio_apikey ;
 
     if($realOrBase == 'real') {
-        $Url = 'http://www.alohaliving.com/search/?page=1&ipp=100&island=3&District=&minprice=0&maxprice=9999999999999&minbeds=0&minbaths=0';
+        $Url = 'http://www.alohaliving.com/search/?page='. $pageNumber .'&ipp=100&island='. $islandNumber .'&District='. $district .'&minprice=0&maxprice=9999999999999&minbeds=0&minbaths=0';
     }else if($realOrBase == 'base') {
         $Url = 'https://extraction.import.io/query/extractor/'. $config_importio_hiis_GUID_search .'?_apikey='. $config_importio_apikey .'&url=http%3A%2F%2Fwww.alohaliving.com%2Fsearch%2F%3Fpage%3D'. $pageNumber .'%26ipp%3D100%26island%3D'. $islandNumber .'%26District%3D'. $district .'%26minprice%3D0%26maxprice%3D9999999999999%26minbeds%3D0%26minbaths%3D0';
     }else {
@@ -65,7 +67,7 @@ function checkUrl($url,$searchOrListing,$addToDatabase = true) {
                 query("INSERT INTO `real_estate_app`.`listings_extractor_log` (`resourceId`, `url`, `searchTerms`, `checksum`, `data`, `realUrl`, `realChecksum`, `realData`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$importUrl) . "', '', '" . mysqli_real_escape_string($con,$result['checksum']) . "', '" . mysqli_real_escape_string($con,json_encode($result[0])) . "', '" . mysqli_real_escape_string($con,$url) . "', '" . mysqli_real_escape_string($con,$checksum) . "', '" . mysqli_real_escape_string($con,$pageData) . "');");
             }
             return false;
-        }else if($searchOrListing == 'listing') {
+        }else if($searchOrListing == 'listing') { //TODO Make sure listings get handled correctly
             if($addToDatabase) {
                 $importUrl = 'https://extraction.import.io/query/extractor/' . $config_importio_hiis_GUID_listing . '?_apikey=' . $config_importio_apikey . '&url=' . urlencode($url);
                 $result = importIOQuery($importUrl,true);
@@ -86,16 +88,13 @@ function fetchCacheUrl($url,$searchOrListing) {
     global $con;
 
     $cached = checkUrl($url,$searchOrListing);
-    if($cached) {
-        if($searchOrListing == 'search') {
-            $result = query("SELECT data , IF(realUrl = '" . mysqli_real_escape_string($con,$url) . "' , realUrl, '') AS realUrl FROM real_estate_app.listings_extractor_log WHERE realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
-            return json_decode($result[0]['data']);
-        }else if($searchOrListing == 'listing') {
-            $result = query("SELECT his_listing_id,url,resource_id,address,price,bedrooms,mls,price/sqft,interior_area_size,year_built,lot_size,land_tenure,on_market_since,last_updated,property_type,oceanfront,description,misc_data,dateFetched , IF(url = '" . mysqli_real_escape_string($con,$url) . "' , url, '') AS url FROM real_estate_app.listings_extractor_log WHERE url = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
-            return $result;
-        }
-    }else {
-        return $cached;
+
+    if($searchOrListing == 'search') {
+        $result = query("SELECT data , IF(realUrl = '" . mysqli_real_escape_string($con,$url) . "' , realUrl, '') AS realUrl FROM real_estate_app.listings_extractor_log WHERE realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
+        return json_decode($result[0]['data']);
+    }else if($searchOrListing == 'listing') {
+        $result = query("SELECT his_listing_id,url,resource_id,address,price,bedrooms,mls,price/sqft,interior_area_size,year_built,lot_size,land_tenure,on_market_since,last_updated,property_type,oceanfront,description,misc_data,dateFetched , IF(url = '" . mysqli_real_escape_string($con, $url) . "' , url, '') AS url FROM real_estate_app.listings_extractor_log WHERE url = '" . mysqli_real_escape_string($con, $url) . "' LIMIT 1;");
+        return $result;
     }
 }
 
@@ -109,10 +108,9 @@ if (mysqli_connect_errno())
 $realUrl = createSearchUrl('real',1,3,'',0,999999999999,0,0);
 
 $first_page_data = fetchCacheUrl($realUrl,'search');
-var_dump($first_page_data);
 $total_pages = intval($first_page_data->extractorData->data[0]->group[0]->{'Amount of Pages'}[0]->text);
 var_dump($total_pages);
-die();
+
 for($i = 1; $i <= $total_pages; $i++) {
     $page_number = $i;
     echo $i;
@@ -121,10 +119,9 @@ for($i = 1; $i <= $total_pages; $i++) {
     for($p = 0; $p <= count($page_data->extractorData->data[1]->group)-1; $p++) {
         var_dump($page_data->extractorData->data[1]->group[$p]->Image[0]->href);
     }
-    for($l = 1; $l <= 100; $l++) {
-
-    }
 }
+
+die('Thanks for playing!');
 
 //TODO Make this update all listings for a specific island and push into sql database
 ?>
