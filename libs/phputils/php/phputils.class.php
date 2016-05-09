@@ -12,6 +12,7 @@ function bit_to_bool($bit) {
 		break;
 		default:
 			echo closeScript('ERROR: Invalid data input given at function bin_to_bool(): ' . $bit);
+			return false;
 		break;
 	}
 }
@@ -26,11 +27,12 @@ function bool_to_bit($bool) {
 		break;
 		default:
 			closeScript('ERROR: Invalid data input given at function bool_to_bin(): ' . $bool);
+			return false;
 		break;
 	}
 }
 
-function clean($string) {
+function cleanString($string) {
    $string = str_replace(' ', '-', $string); 
 
    return preg_replace('/[^A-Za-z0-9\-]/', '', $string); 
@@ -59,7 +61,6 @@ function generate_random_string($nbLetters){
 }
 
 function get_client_ip() {
-    $ipaddress = '';
     if (@$_SERVER["HTTP_CLIENT_IP"])
         $ipaddress = $_SERVER["HTTP_CLIENT_IP"];
     else if(@$_SERVER["HTTP_X_FORWARDED_FOR"])
