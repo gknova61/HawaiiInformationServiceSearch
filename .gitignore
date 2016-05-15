@@ -1,6 +1,9 @@
 # PHPStorm IDE Folder
 .idea
 
+#DB Credentials File
+dbInfo.php
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
