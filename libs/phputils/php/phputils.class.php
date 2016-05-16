@@ -1,4 +1,5 @@
 <?php
+//Convert binary bit to boolean
 function bit_to_bool($bit) {
 	if(gettype($bit) === 'string') {
 		$bit = intval($bit);
@@ -17,6 +18,7 @@ function bit_to_bool($bit) {
 	}
 }
 
+//Convert boolean to binary bit
 function bool_to_bit($bool) {
 	switch($bool) {
 		case false: 
@@ -32,24 +34,27 @@ function bool_to_bit($bool) {
 	}
 }
 
+//Strips out extra characters in a given string
 function cleanString($string) {
    $string = str_replace(' ', '-', $string); 
 
    return preg_replace('/[^A-Za-z0-9\-]/', '', $string); 
 }
 
+//A version of die() or exit() that will also kill the MySQL Connection. Must specify a message in order for script to die
 function closeScript($message = false) {
 	global $con;
 	if($con) {mysqli_close($con);}
 	if($message) {die($message);}
 }
 
-function getBase62Char($num) {
-	$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    return $chars[$num];
-}
-
+//Returns a random string, parameter is length
 function generate_random_string($nbLetters){
+	function getBase62Char($num) {
+		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    	return $chars[$num];
+	}
+	
     $randString="";
 
     for($i=0; $i < $nbLetters; $i++){
@@ -60,6 +65,7 @@ function generate_random_string($nbLetters){
     return $randString;
 }
 
+//Better way to get a client's ip address
 function get_client_ip() {
     if (@$_SERVER["HTTP_CLIENT_IP"])
         $ipaddress = $_SERVER["HTTP_CLIENT_IP"];
@@ -79,6 +85,7 @@ function get_client_ip() {
     return $ipaddress;
 }
 
+//Returns a random string of $length with an array ($valid_chars) of valid characters
 function get_random_string($valid_chars, $length)
 {
     $random_string = "";
@@ -93,6 +100,7 @@ function get_random_string($valid_chars, $length)
     return $random_string;
 }
 
+//Run a MySQL query on $con connection. Returns either an array or false
 function query($query) {
 	global $con;
 	$result = mysqli_query($con,$query);
@@ -110,7 +118,24 @@ function query($query) {
 	}
 }
 
-function toInt($string) {
-	return intval(preg_replace("/[^0-9]/","",$string));
+//Connect to MySQL based on $dbServer, $dbUsername, $dbPassword, $dbDatabse variables that are already set. Returns $con variable
+function MySQLConnect() {
+	global $dbServer;
+	global $dbUsername;
+	global $dbPassword;
+	global $dbDatabase;
+	
+	$con=mysqli_connect($dbServer,$dbUsername,$dbPassword,$dbDatabase);
+	if (mysqli_connect_errno())
+	{
+    	die('Please contact support with this error. Failed to connect to MySQL: ' . mysqli_connect_error());
+	}
+	
+	return $con;
+}
+
+//Convert any string into a float, stripping out extra characters
+function toFloat($string) {
+	return floatval(preg_replace("/[^0-9]/","",$string));
 }
 ?>

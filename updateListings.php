@@ -13,6 +13,13 @@ require_once('libs/chromephp/php/chromephp.php');
 
 set_time_limit(0); //This is a long script, usually takes ~10min depending on database size of HIIS
 
+/**
+ * @param $realOrBase //Type of url to generate. Real is the actual URL. Base is the import.io URL
+ * @param $pageNumber
+ * @param $islandNumber
+ * @param $district
+ * @return bool|string //Will return URL or false if $realOrBase is invalid
+ */
 function createSearchUrl($realOrBase, $pageNumber, $islandNumber, $district) {
     global $config_importio_hiis_GUID_search;
     global $config_importio_apikey ;
@@ -28,6 +35,11 @@ function createSearchUrl($realOrBase, $pageNumber, $islandNumber, $district) {
     return $Url;
 }
 
+/**
+ * @param $realOrBase //Type of url to generate. Real is the actual URL. Base is the import.io URL
+ * @param $listingId //This would be the MLS
+ * @return bool|string //Will return URL or false if $realOrBase is invalid
+ */
 function createListingUrl($realOrBase, $listingId) {
     global $config_importio_hiis_GUID_listing;
     global $config_importio_apikey;
@@ -43,6 +55,11 @@ function createListingUrl($realOrBase, $listingId) {
     return $Url;
 }
 
+/**
+ * @param $url //URL shall be in base (import.io) form
+ * @param bool $returnChecksum //True to return checksum of page in array, false to just return the array from import.io
+ * @return array
+ */
 function importIOQuery($url, $returnChecksum = false) {
     $pageData = file_get_contents($url);
     if($returnChecksum) {
@@ -51,6 +68,12 @@ function importIOQuery($url, $returnChecksum = false) {
     return json_decode($pageData);
 }
 
+/**
+ * @param $url //URL you want to check to see if it's cached
+ * @param $searchOrListing //Either 'search' or 'listing'. Will tell it what type of URL you're checking
+ * @param bool $addToDatabase //If you want this check to be added to the database if it's not already cached
+ * @return bool|string //Will return false if it was not previous cached, or the cache was outdated
+ */
 function checkUrl($url, $searchOrListing, $addToDatabase = true) {
     global $con;
     global $config_importio_apikey;
@@ -101,7 +124,7 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
                     ChromePhp::warn("WARNING: Oceanfront's value has changed from Yes to No. Here's what it is now: " . $result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text);
                 }
 
-                query("INSERT INTO `real_estate_app`.`listings` (`url`, `resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('". mysqli_real_escape_string($con, $result[0]->extractorData->url). "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->Price[0]->text)) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$oceanfront) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'none', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');");
+                query("INSERT INTO `real_estate_app`.`listings` (`url`, `resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('". mysqli_real_escape_string($con, $result[0]->extractorData->url). "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price[0]->text)) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$oceanfront) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'none', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');");
             }
         }else {
             return false;
@@ -109,6 +132,11 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
     }
 }
 
+/**
+ * @param $url //url to fetch from the cache
+ * @param $searchOrListing //either a 'search' URL or 'listing URL
+ * @return array|bool|mixed|null
+ */
 function fetchCacheUrl($url, $searchOrListing) {
     global $con;
 
@@ -125,12 +153,7 @@ function fetchCacheUrl($url, $searchOrListing) {
     return false;
 }
 
-//Connect to MySQL
-$con=mysqli_connect($dbServer,$dbUsername,$dbPassword,$dbDatabase);
-if (mysqli_connect_errno())
-{
-    die('Please contact support with this error. Failed to connect to MySQL: ' . mysqli_connect_error());
-}
+$con = MySQLConnect();
 
 $realUrl = createSearchUrl('real',1,3,'',0,999999999999,0,0);
 $first_page_data = fetchCacheUrl($realUrl,'search');

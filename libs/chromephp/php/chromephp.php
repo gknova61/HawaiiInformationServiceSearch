@@ -344,6 +344,7 @@ class ChromePhp
      * @param ReflectionProperty
      * @return string
      */
+    /** @noinspection PhpInconsistentReturnPointsInspection */
     protected function _getPropertyKey(ReflectionProperty $property)
     {
         $static = $property->isStatic() ? ' static' : '';
