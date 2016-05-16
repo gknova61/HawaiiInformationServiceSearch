@@ -13,7 +13,7 @@ require_once('libs/chromephp/php/chromephp.php');
 
 set_time_limit(0); //This is a long script, usually takes ~10min depending on database size of HIIS
 
-function createSearchUrl($realOrBase,$pageNumber,$islandNumber,$district) {
+function createSearchUrl($realOrBase, $pageNumber, $islandNumber, $district) {
     global $config_importio_hiis_GUID_search;
     global $config_importio_apikey ;
 
@@ -28,7 +28,7 @@ function createSearchUrl($realOrBase,$pageNumber,$islandNumber,$district) {
     return $Url;
 }
 
-function createListingUrl($realOrBase,$listingId) {
+function createListingUrl($realOrBase, $listingId) {
     global $config_importio_hiis_GUID_listing;
     global $config_importio_apikey;
 
@@ -43,7 +43,7 @@ function createListingUrl($realOrBase,$listingId) {
     return $Url;
 }
 
-function importIOQuery($url,$returnChecksum = false) {
+function importIOQuery($url, $returnChecksum = false) {
     $pageData = file_get_contents($url);
     if($returnChecksum) {
         return array(json_decode($pageData),'checksum' => md5($pageData));
@@ -51,7 +51,7 @@ function importIOQuery($url,$returnChecksum = false) {
     return json_decode($pageData);
 }
 
-function checkUrl($url,$searchOrListing,$addToDatabase = true) {
+function checkUrl($url, $searchOrListing, $addToDatabase = true) {
     global $con;
     global $config_importio_apikey;
     global $config_importio_hiis_GUID_search;
@@ -77,7 +77,6 @@ function checkUrl($url,$searchOrListing,$addToDatabase = true) {
     }else {
         query("DELETE FROM `real_estate_app`.`listings_extractor_log` WHERE `realUrl`='". mysqli_real_escape_string($con,$url)."';");
 
-
         if($searchOrListing == 'search') {
             if($addToDatabase) {
                 $importUrl = 'https://extraction.import.io/query/extractor/'. $config_importio_hiis_GUID_search .'?_apikey='. $config_importio_apikey .'&url='. urlencode($url);
@@ -91,9 +90,18 @@ function checkUrl($url,$searchOrListing,$addToDatabase = true) {
                 $result = importIOQuery($importUrl,true);
                 //$result[0]->extractorData->url is the url
                 //$result[0]->extractorData->resourceId is the resource ID
-                var_dump($result['checksum']);
-                //echo "INSERT INTO `real_estate_app`.`listings` (`resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Price[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Price/sqft[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'blaeh', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');";
-                //query("INSERT INTO `real_estate_app`.`listings` (`resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Price[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Price/sqft[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'blaeh', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');")
+                //var_dump($result['checksum']);
+                var_dump($result[0]->extractorData->data[0]->group[0]);
+
+                //Oceanfront code string to bit
+                $oceanfront = 0;
+                if(strtolower($result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text) == 'yes') {
+                    $oceanfront = 1;
+                }else if(strtolower($result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text) != 'no') {
+                    ChromePhp::warn("WARNING: Oceanfront's value has changed from Yes to No. Here's what it is now: " . $result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text);
+                }
+
+                query("INSERT INTO `real_estate_app`.`listings` (`url`, `resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('". mysqli_real_escape_string($con, $result[0]->extractorData->url). "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->Price[0]->text)) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,toInt($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$oceanfront) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'none', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');");
             }
         }else {
             return false;
@@ -101,7 +109,7 @@ function checkUrl($url,$searchOrListing,$addToDatabase = true) {
     }
 }
 
-function fetchCacheUrl($url,$searchOrListing) {
+function fetchCacheUrl($url, $searchOrListing) {
     global $con;
 
     checkUrl($url,$searchOrListing);
@@ -133,9 +141,9 @@ for($i = 1; $i <= $total_pages-40; $i++) { //take out the -40 later
     echo $i;
     $page_data = fetchCacheUrl(createSearchUrl('real',$i,3,'',0,999999999999,0,0),'search');
 
-    /*for($p = 0; $p <= 1; $p++) { //replace 1 with count($page_data->extractorData->data[1]->group)-1 when ready for full testing
+    for($p = 0; $p <= 1; $p++) { //replace 1 with count($page_data->extractorData->data[1]->group)-1 when ready for full testing
         fetchCacheUrl($page_data->extractorData->data[1]->group[$p]->Image[0]->href,'listing');
-    }*/
+    }
 }
 
 die('Thanks for playing!');

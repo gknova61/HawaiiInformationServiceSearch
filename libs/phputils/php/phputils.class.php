@@ -109,4 +109,8 @@ function query($query) {
 		return false;
 	}
 }
+
+function toInt($string) {
+	return intval(preg_replace("/[^0-9]/","",$string));
+}
 ?>
