@@ -181,7 +181,7 @@ function MySQLConnect() {
 
 /**
  * Convert any string into a float, stripping out all extra characters.
- * 
+ *
  * @param string $string
  * @return float
  */
