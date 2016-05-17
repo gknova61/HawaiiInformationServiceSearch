@@ -101,27 +101,31 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
 
     $checksum = md5($pageData);
 
-    $result = query("SELECT id FROM real_estate_app.listings_extractor_log WHERE realChecksum = '" . mysqli_real_escape_string($con,$checksum) . "' AND realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
+    if($searchOrListing == 'search') {
+        $result = query("SELECT id FROM real_estate_app.listings_extractor_log WHERE realChecksum = '" . mysqli_real_escape_string($con,$checksum) . "' AND realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
+    }else if($searchOrListing == 'listing') {
+        $result = query("SELECT id FROM real_estate_app.listings WHERE checksum = '" . mysqli_real_escape_string($con,$checksum) . "' AND url = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
+    }
 
     if($result) {
         return true;
     }else {
-        query("DELETE FROM `real_estate_app`.`listings_extractor_log` WHERE `realUrl`='". mysqli_real_escape_string($con,$url)."';");
 
         if($searchOrListing == 'search') {
+            query("DELETE FROM `real_estate_app`.`listings_extractor_log` WHERE `realUrl`='". mysqli_real_escape_string($con,$url)."';");
             if($addToDatabase) {
                 $importUrl = 'https://extraction.import.io/query/extractor/'. $config_importio_hiis_GUID_search .'?_apikey='. $config_importio_apikey .'&url='. urlencode($url);
                 $result = importIOQuery($importUrl,true);
                 query("INSERT INTO `real_estate_app`.`listings_extractor_log` (`resourceId`, `url`, `searchTerms`, `checksum`, `data`, `realUrl`, `realChecksum`, `realData`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$importUrl) . "', '', '" . mysqli_real_escape_string($con,$result['checksum']) . "', '" . mysqli_real_escape_string($con,json_encode($result[0])) . "', '" . mysqli_real_escape_string($con,$url) . "', '" . mysqli_real_escape_string($con,$checksum) . "', '" . mysqli_real_escape_string($con,$pageData) . "');");
             }
             return false;
-        }else if($searchOrListing == 'listing') { //TODO Make sure listings get handled correctly
+        }else if($searchOrListing == 'listing') { //TODO Test code with listings when MySQL Server is able to come back online. They should be able to delete on their own if a new version of the listing is available and differentiate in the select statements above
+            query("DELETE FROM `real_estate_app`.`listings` WHERE `url`='". mysqli_real_escape_string($con,$url)."';");
+
             if($addToDatabase) {
                 $importUrl = 'https://extraction.import.io/query/extractor/' . $config_importio_hiis_GUID_listing . '?_apikey=' . $config_importio_apikey . '&url=' . urlencode($url);
                 $result = importIOQuery($importUrl,true);
-                //$result[0]->extractorData->url is the url
-                //$result[0]->extractorData->resourceId is the resource ID
-                //var_dump($result['checksum']);
+
                 var_dump($result[0]->extractorData->data[0]->group[0]);
 
                 //Oceanfront code string to bit
@@ -132,7 +136,7 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
                     ChromePhp::warn("WARNING: Oceanfront's value has changed from Yes to No. Here's what it is now: " . $result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text);
                 }
 
-                query("INSERT INTO `real_estate_app`.`listings` (`url`, `resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('". mysqli_real_escape_string($con, $result[0]->extractorData->url). "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price[0]->text)) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$oceanfront) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'none', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');");
+                query("INSERT INTO `real_estate_app`.`listings` (`his_listing_id`, `url`, `resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('". mysqli_real_escape_string($con, $result[0]->extractorData->data[0]->group[0]->MLS[0]->text). "', '". mysqli_real_escape_string($con, $result[0]->extractorData->url). "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price[0]->text)) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$oceanfront) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'none', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');");
             }
         }else {
             return false;
@@ -156,7 +160,7 @@ function fetchCacheUrl($url, $searchOrListing) {
         $result = query("SELECT data FROM real_estate_app.listings_extractor_log WHERE realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
         return json_decode($result[0]['data']);
     }else if($searchOrListing == 'listing') {
-        $result = query("SELECT his_listing_id,url,resource_id,address,price,bedrooms,mls,price/sqft,interior_area_size,year_built,lot_size,land_tenure,on_market_since,last_updated,property_type,oceanfront,description,misc_data,dateFetched , IF(url = '" . mysqli_real_escape_string($con, $url) . "' , url, '') AS url FROM real_estate_app.listings_extractor_log WHERE url = '" . mysqli_real_escape_string($con, $url) . "' LIMIT 1;");
+        $result = query("SELECT * FROM real_estate_app.listings WHERE url = '". mysqli_real_escape_string($con, $url) ."' LIMIT 1;");
         return $result;
     }
 
