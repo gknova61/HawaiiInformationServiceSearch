@@ -14,6 +14,8 @@ require_once('libs/chromephp/php/chromephp.php');
 set_time_limit(0); //This is a long script, usually takes ~10min depending on database size of HIIS
 
 /**
+ * Generates a 'search' URL for AlohaLiving
+ *
  * @param $realOrBase //Type of url to generate. Real is the actual URL. Base is the import.io URL
  * @param $pageNumber
  * @param $islandNumber
@@ -36,6 +38,8 @@ function createSearchUrl($realOrBase, $pageNumber, $islandNumber, $district) {
 }
 
 /**
+ * Generates a 'listing' URL for AlohaLiving
+ *
  * @param $realOrBase //Type of url to generate. Real is the actual URL. Base is the import.io URL
  * @param $listingId //This would be the MLS
  * @return bool|string //Will return URL or false if $realOrBase is invalid
@@ -56,6 +60,8 @@ function createListingUrl($realOrBase, $listingId) {
 }
 
 /**
+ * Use this function for running queries to ImportIO. Will be useful later in tracking reamining amount of API requests on the "client"
+ *
  * @param $url //URL shall be in base (import.io) form
  * @param bool $returnChecksum //True to return checksum of page in array, false to just return the array from import.io
  * @return array
@@ -69,6 +75,8 @@ function importIOQuery($url, $returnChecksum = false) {
 }
 
 /**
+ * Check if a URL is cached yet. If it is not, it will add it to the database cache by default
+ *
  * @param $url //URL you want to check to see if it's cached
  * @param $searchOrListing //Either 'search' or 'listing'. Will tell it what type of URL you're checking
  * @param bool $addToDatabase //If you want this check to be added to the database if it's not already cached
@@ -133,6 +141,8 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
 }
 
 /**
+ * Fetch the contents of a cached URL. Returns false if the URL is not already cached
+ *
  * @param $url //url to fetch from the cache
  * @param $searchOrListing //either a 'search' URL or 'listing URL
  * @return array|bool|mixed|null
