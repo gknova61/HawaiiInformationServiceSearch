@@ -14,10 +14,10 @@ require_once('libs/chromephp/php/chromephp.php');
 set_time_limit(0); //This is a long script, usually takes ~10min depending on database size of HIIS
 
 /**
- * Generates a 'search' URL for AlohaLiving
+ * Generates a 'search' URL for AlohaLiving.
  *
  * @param $realOrBase //Type of url to generate. Real is the actual URL. Base is the import.io URL
- * @param $pageNumber
+ * @param $pageNumber //This is the page number you want to get. Set to 1 if you want the first results
  * @param $islandNumber
  * @param $district
  * @return bool|string //Will return URL or false if $realOrBase is invalid
@@ -38,7 +38,7 @@ function createSearchUrl($realOrBase, $pageNumber, $islandNumber, $district) {
 }
 
 /**
- * Generates a 'listing' URL for AlohaLiving
+ * Generates a 'listing' URL for AlohaLiving.
  *
  * @param $realOrBase //Type of url to generate. Real is the actual URL. Base is the import.io URL
  * @param $listingId //This would be the MLS
@@ -60,11 +60,11 @@ function createListingUrl($realOrBase, $listingId) {
 }
 
 /**
- * Use this function for running queries to ImportIO. Will be useful later in tracking reamining amount of API requests on the "client"
+ * Use this function for running queries to ImportIO. Will be useful later in tracking reamining amount of API requests on the "client".
  *
  * @param $url //URL shall be in base (import.io) form
  * @param bool $returnChecksum //True to return checksum of page in array, false to just return the array from import.io
- * @return array
+ * @return array //Returns the contents of ImportIO, with checksum if requested
  */
 function importIOQuery($url, $returnChecksum = false) {
     $pageData = file_get_contents($url);
@@ -75,7 +75,7 @@ function importIOQuery($url, $returnChecksum = false) {
 }
 
 /**
- * Check if a URL is cached yet. If it is not, it will add it to the database cache by default
+ * Check if a URL is cached yet. If it is not, it will add it to the database cache by default.
  *
  * @param $url //URL you want to check to see if it's cached
  * @param $searchOrListing //Either 'search' or 'listing'. Will tell it what type of URL you're checking
@@ -141,11 +141,11 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
 }
 
 /**
- * Fetch the contents of a cached URL. Returns false if the URL is not already cached
+ * Fetch the contents of a cached URL.
  *
  * @param $url //url to fetch from the cache
  * @param $searchOrListing //either a 'search' URL or 'listing URL
- * @return array|bool|mixed|null
+ * @return array|bool|mixed|null //Will return the URL cache in an array, or false if the URL isn't already cached
  */
 function fetchCacheUrl($url, $searchOrListing) {
     global $con;

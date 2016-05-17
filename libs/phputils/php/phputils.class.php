@@ -1,5 +1,21 @@
 <?php
-//Convert binary bit to boolean
+/**
+ * A version of die() or exit() that will also kill the MySQL Connection.
+ * 
+ * @param string $message //Specify a $message for the script to die()
+ */
+function closeScript($message = '') {
+	global $con;
+	if($con) {mysqli_close($con);}
+	if($message != '') {die($message);}
+}
+
+/**
+ * Convert binary bit to boolean.
+ * 
+ * @param $bit //0 or 1
+ * @return bool
+ */
 function bit_to_bool($bit) {
 	if(gettype($bit) === 'string') {
 		$bit = intval($bit);
@@ -18,7 +34,12 @@ function bit_to_bool($bit) {
 	}
 }
 
-//Convert boolean to binary bit
+/**
+ * Convert boolean to binary bit.
+ * 
+ * @param $bool
+ * @return bool|int //Will only return false if an invalid/no bool is specified
+ */
 function bool_to_bit($bool) {
 	switch($bool) {
 		case false: 
@@ -34,21 +55,24 @@ function bool_to_bit($bool) {
 	}
 }
 
-//Strips out extra characters in a given string
+/**
+ * Strips out extra characters in a given string.
+ * 
+ * @param $string
+ * @return string
+ */
 function cleanString($string) {
    $string = str_replace(' ', '-', $string); 
 
    return preg_replace('/[^A-Za-z0-9\-]/', '', $string); 
 }
 
-//A version of die() or exit() that will also kill the MySQL Connection. Must specify a message in order for script to die
-function closeScript($message = false) {
-	global $con;
-	if($con) {mysqli_close($con);}
-	if($message) {die($message);}
-}
-
-//Returns a random string, parameter is length
+/**
+ * Returns a random string.
+ * 
+ * @param int $nbLetters //length of string
+ * @return string
+ */
 function generate_random_string($nbLetters){
 	function getBase62Char($num) {
 		$chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -65,7 +89,11 @@ function generate_random_string($nbLetters){
     return $randString;
 }
 
-//Better way to get a client's ip address
+/**
+ * A Better way to get a client's ip address.
+ * 
+ * @return bool|string //Will return false if none is found
+ */
 function get_client_ip() {
     if (@$_SERVER["HTTP_CLIENT_IP"])
         $ipaddress = $_SERVER["HTTP_CLIENT_IP"];
@@ -80,12 +108,18 @@ function get_client_ip() {
     else if(@$_SERVER["REMOTE_ADDR"])
         $ipaddress = $_SERVER["REMOTE_ADDR"];
     else
-        $ipaddress = 'UNKNOWN';
+        $ipaddress = false;
  
     return $ipaddress;
 }
 
-//Returns a random string of $length with an array ($valid_chars) of valid characters
+/**
+ * Returns a random string.
+ * 
+ * @param array $valid_chars //array of valid characters
+ * @param int $length //length of random string
+ * @return string
+ */
 function get_random_string($valid_chars, $length)
 {
     $random_string = "";
@@ -100,7 +134,12 @@ function get_random_string($valid_chars, $length)
     return $random_string;
 }
 
-//Run a MySQL query on $con connection. Returns either an array or false
+/**
+ * Run a MySQL query on $con connection variable (must be already set).
+ *
+ * @param string $query //Your MySQL query
+ * @return array|bool //Will return the result, or it will die with an error printed to screen
+ */
 function query($query) {
 	global $con;
 	$result = mysqli_query($con,$query);
@@ -118,7 +157,12 @@ function query($query) {
 	}
 }
 
-//Connect to MySQL based on $dbServer, $dbUsername, $dbPassword, $dbDatabse variables that are already set. Returns $con variable
+/**
+ * Connect to MySQL based on $dbServer, $dbUsername, $dbPassword, $dbDatabse variables that must be already set. Returns the connection variable
+ * Recommended: Set the output of this function to a variable $con if you plan on using the above query function i.e. $con = MySQLConnect();
+ *
+ * @return mysqli
+ */
 function MySQLConnect() {
 	global $dbServer;
 	global $dbUsername;
@@ -134,8 +178,13 @@ function MySQLConnect() {
 	return $con;
 }
 
-//Convert any string into a float, stripping out extra characters
+
+/**
+ * Convert any string into a float, stripping out all extra characters.
+ * 
+ * @param string $string
+ * @return float
+ */
 function toFloat($string) {
 	return floatval(preg_replace("/[^0-9]/","",$string));
 }
-?>
