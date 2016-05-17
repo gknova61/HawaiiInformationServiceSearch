@@ -60,7 +60,7 @@ function createListingUrl($realOrBase, $listingId) {
 }
 
 /**
- * Use this function for running queries to ImportIO. Will be useful later in tracking reamining amount of API requests on the "client".
+ * Use this function for running queries to ImportIO. Will be useful later in tracking remaining amount of API requests on the "client".
  *
  * @param $url //URL shall be in base (import.io) form
  * @param bool $returnChecksum //True to return checksum of page in array, false to just return the array from import.io
@@ -119,7 +119,7 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
                 query("INSERT INTO `real_estate_app`.`listings_extractor_log` (`resourceId`, `url`, `searchTerms`, `checksum`, `data`, `realUrl`, `realChecksum`, `realData`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$importUrl) . "', '', '" . mysqli_real_escape_string($con,$result['checksum']) . "', '" . mysqli_real_escape_string($con,json_encode($result[0])) . "', '" . mysqli_real_escape_string($con,$url) . "', '" . mysqli_real_escape_string($con,$checksum) . "', '" . mysqli_real_escape_string($con,$pageData) . "');");
             }
             return false;
-        }else if($searchOrListing == 'listing') { //TODO Test code with listings when MySQL Server is able to come back online. They should be able to delete on their own if a new version of the listing is available and differentiate in the select statements above
+        }else if($searchOrListing == 'listing') {
             query("DELETE FROM `real_estate_app`.`listings` WHERE `url`='". mysqli_real_escape_string($con,$url)."';");
 
             if($addToDatabase) {
@@ -142,6 +142,7 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
             return false;
         }
     }
+    return false;
 }
 
 /**

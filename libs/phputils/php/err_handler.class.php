@@ -45,4 +45,3 @@ function userErrorHandler($errno, $errmsg, $filename, $linenum, $vars)
     }
 }
 $old_error_handler = set_error_handler('userErrorHandler');
-?>

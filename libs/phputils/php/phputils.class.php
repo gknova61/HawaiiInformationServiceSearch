@@ -28,7 +28,7 @@ function bit_to_bool($bit) {
 			return true;
 		break;
 		default:
-			echo closeScript('ERROR: Invalid data input given at function bin_to_bool(): ' . $bit);
+			closeScript('ERROR: Invalid data input given at function bin_to_bool(): ' . $bit);
 			return false;
 		break;
 	}
@@ -158,7 +158,7 @@ function query($query) {
 }
 
 /**
- * Connect to MySQL based on $dbServer, $dbUsername, $dbPassword, $dbDatabse variables that must be already set. Returns the connection variable
+ * Connect to MySQL based on $dbServer, $dbUsername, $dbPassword, $dbDatabase variables that must be already set. Returns the connection variable
  * Recommended: Set the output of this function to a variable $con if you plan on using the above query function i.e. $con = MySQLConnect();
  *
  * @return mysqli
