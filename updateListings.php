@@ -116,7 +116,17 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
             if($addToDatabase) {
                 $importUrl = 'https://extraction.import.io/query/extractor/'. $config_importio_hiis_GUID_search .'?_apikey='. $config_importio_apikey .'&url='. urlencode($url);
                 $result = importIOQuery($importUrl,true);
-                query("INSERT INTO `real_estate_app`.`listings_extractor_log` (`resourceId`, `url`, `searchTerms`, `checksum`, `data`, `realUrl`, `realChecksum`, `realData`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$importUrl) . "', '', '" . mysqli_real_escape_string($con,$result['checksum']) . "', '" . mysqli_real_escape_string($con,json_encode($result[0])) . "', '" . mysqli_real_escape_string($con,$url) . "', '" . mysqli_real_escape_string($con,$checksum) . "', '" . mysqli_real_escape_string($con,$pageData) . "');");
+
+                $listing_log = array(
+                    'resourceId' => $result[0]->extractorData->resourceId,
+                    'url' => $importUrl,
+                    'searchTerms' => 'TBD',
+                    'checksum' => $result['checksum'],
+                    'data' => json_encode($result[0]),
+                    'realUrl' => $url,
+                    'realChecksum' => $checksum,
+                    'realData' => $pageData,
+                ); //TODO push this array into orchestrate listing_log
             }
             return false;
         }else if($searchOrListing == 'listing') {
@@ -136,7 +146,29 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
                     ChromePhp::warn("WARNING: Oceanfront's value has changed from Yes to No. Here's what it is now: " . $result[0]->extractorData->data[0]->group[0]->Oceanfront[0]->text);
                 }
 
-                query("INSERT INTO `real_estate_app`.`listings` (`his_listing_id`, `url`, `resource_id`, `address`, `price`, `bedrooms`, `mls`, `price/sqft`, `interior_area_size`, `year_built`, `lot_size`, `land_tenure`, `on_market_since`, `last_updated`, `property_type`, `oceanfront`, `description`, `misc_data`, `statusCode`, `checksum`) VALUES ('". mysqli_real_escape_string($con, $result[0]->extractorData->data[0]->group[0]->MLS[0]->text). "', '". mysqli_real_escape_string($con, $result[0]->extractorData->url). "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->Address[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price[0]->text)) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->MLS[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text) . "', '" . mysqli_real_escape_string($con,toFloat($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text)) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text) . "', '" . mysqli_real_escape_string($con,$oceanfront) . "', '" . mysqli_real_escape_string($con,$result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text) . "', 'none', '" . mysqli_real_escape_string($con,$result[0]->pageData->statusCode) . "', '" . mysqli_real_escape_string($con,$result['checksum']) . "');");
+                $listing = array(
+                    'listing_id' => $result[0]->extractorData->data[0]->group[0]->MLS[0]->text,
+                    'url' => $result[0]->extractorData->url,
+                    'resource_id' => $result[0]->extractorData->resourceId,
+                    'address' => $result[0]->extractorData->data[0]->group[0]->Address[0]->text,
+                    'price' => toFloat($result[0]->extractorData->data[0]->group[0]->Price[0]->text),
+                    'bedrooms' => intval($result[0]->extractorData->data[0]->group[0]->Bedrooms[0]->text),
+                    'mls' => $result[0]->extractorData->data[0]->group[0]->MLS[0]->text,
+                    'price/sqft' => toFloat($result[0]->extractorData->data[0]->group[0]->Price->sqft[0]->text),
+                    'interior_area_size' => $result[0]->extractorData->data[0]->group[0]->{'Interior Area'}[0]->text,
+                    'year_built' => intval($result[0]->extractorData->data[0]->group[0]->{'Year Built'}[0]->text),
+                    'lot_size' => $result[0]->extractorData->data[0]->group[0]->{'Lot Size'}[0]->text,
+                    'land_tenure' => $result[0]->extractorData->data[0]->group[0]->{'Land Tenure'}[0]->text,
+                    'on_market_since' => $result[0]->extractorData->data[0]->group[0]->{'On Market Since'}[0]->text,
+                    'last_updated' => $result[0]->extractorData->data[0]->group[0]->{'Last Updated'}[0]->text,
+                    'property_type' => $result[0]->extractorData->data[0]->group[0]->{'Property Type'}[0]->text,
+                    'oceanfront' => $oceanfront,
+                    'description' => $result[0]->extractorData->data[0]->group[0]->{'Listing Remarks'}[0]->text,
+                    'misc_data' => 'N/A',
+                    'statusCode' => $result[0]->pageData->statusCode,
+                    'checksum' => $result['checksum']
+                );
+                //TODO Push this array to orchestrate
             }
         }else {
             return false;
