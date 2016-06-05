@@ -5,11 +5,16 @@
  * Date: 5/7/2016
  * Time: 9:43 PM
  */
-
-require_once("config/config.php");
-require_once("config/dbInfo.php");
-require_once("libs/phputils/php/phputils.class.php");
+require_once('vendor/autoload.php');
+require_once('config/config.php');
+require_once('config/MySQLDBInfo.php');
+require_once('init/orchestrate.php');
+require_once('libs/phputils/php/phputils.class.php');
 require_once('libs/chromephp/php/chromephp.php');
+
+use SocalNick\Orchestrate\Client;
+use SocalNick\Orchestrate\KvPutOperation;
+$client = new Client($config_orchestrate_apikey,'https://api.ctl-uc1-a.orchestrate.io/v0/');
 
 set_time_limit(0); //This is a long script, usually takes ~10min depending on database size of HIIS
 
@@ -83,15 +88,11 @@ function importIOQuery($url, $returnChecksum = false) {
  * @return bool|string //Will return false if it was not previous cached, or the cache was outdated
  */
 function checkUrl($url, $searchOrListing, $addToDatabase = true) {
+    global $client;
     global $con;
     global $config_importio_apikey;
     global $config_importio_hiis_GUID_search;
     global $config_importio_hiis_GUID_listing;
-
-    if(!$con) {
-        ChromePhp::warn('There is no MySQL Connection. Therefore, we cannot check to see if the listing data is in the database');
-        return 'No SQL Connection';
-    }
 
     $pageData = file_get_contents($url);
 
@@ -104,8 +105,10 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
     if($searchOrListing == 'search') {
         $result = query("SELECT id FROM real_estate_app.listings_extractor_log WHERE realChecksum = '" . mysqli_real_escape_string($con,$checksum) . "' AND realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
     }else if($searchOrListing == 'listing') {
-        $result = query("SELECT id FROM real_estate_app.listings WHERE checksum = '" . mysqli_real_escape_string($con,$checksum) . "' AND url = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
+        //$result = query("SELECT id FROM real_estate_app.listings WHERE checksum = '" . mysqli_real_escape_string($con,$checksum) . "' AND url = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
     }
+
+    $result = false;
 
     if($result) {
         return true;
@@ -126,17 +129,19 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
                     'realUrl' => $url,
                     'realChecksum' => $checksum,
                     'realData' => $pageData,
-                ); //TODO push this array into orchestrate listing_log
-            }
+                );
+
+                query("INSERT INTO `real_estate_app`.`listings_extractor_log` (`resourceId`, `url`, `searchTerms`, `checksum`, `data`, `realUrl`, `realChecksum`, `realData`) VALUES ('" . mysqli_real_escape_string($con,$result[0]->extractorData->resourceId) . "', '" . mysqli_real_escape_string($con,$importUrl) . "', '', '" . mysqli_real_escape_string($con,$result['checksum']) . "', '" . mysqli_real_escape_string($con,json_encode($result[0])) . "', '" . mysqli_real_escape_string($con,$url) . "', '" . mysqli_real_escape_string($con,$checksum) . "', '" . mysqli_real_escape_string($con,$pageData) . "');");
+        }
             return false;
         }else if($searchOrListing == 'listing') {
-            query("DELETE FROM `real_estate_app`.`listings` WHERE `url`='". mysqli_real_escape_string($con,$url)."';");
+            //query("DELETE FROM `real_estate_app`.`listings` WHERE `url`='". mysqli_real_escape_string($con,$url)."';");
 
             if($addToDatabase) {
                 $importUrl = 'https://extraction.import.io/query/extractor/' . $config_importio_hiis_GUID_listing . '?_apikey=' . $config_importio_apikey . '&url=' . urlencode($url);
                 $result = importIOQuery($importUrl,true);
 
-                var_dump($result[0]->extractorData->data[0]->group[0]);
+                //var_dump($result[0]->extractorData->data[0]->group[0]);
 
                 //Oceanfront code string to bit
                 $oceanfront = 0;
@@ -168,7 +173,11 @@ function checkUrl($url, $searchOrListing, $addToDatabase = true) {
                     'statusCode' => $result[0]->pageData->statusCode,
                     'checksum' => $result['checksum']
                 );
-                //TODO Push this array to orchestrate
+
+                $kvPutOp = new KvPutOperation('listings', $listing['listing_id'], json_encode($listing));
+                $kvObject = $client->execute($kvPutOp);
+                $ref = $kvObject->getRef();
+                echo $ref;
             }
         }else {
             return false;
@@ -193,8 +202,8 @@ function fetchCacheUrl($url, $searchOrListing) {
         $result = query("SELECT data FROM real_estate_app.listings_extractor_log WHERE realUrl = '" . mysqli_real_escape_string($con,$url) . "' LIMIT 1;");
         return json_decode($result[0]['data']);
     }else if($searchOrListing == 'listing') {
-        $result = query("SELECT * FROM real_estate_app.listings WHERE url = '". mysqli_real_escape_string($con, $url) ."' LIMIT 1;");
-        return $result;
+        //$result = query("SELECT * FROM real_estate_app.listings WHERE url = '". mysqli_real_escape_string($con, $url) ."' LIMIT 1;");
+        //return $result;
     }
 
     return false;
@@ -205,7 +214,7 @@ $con = MySQLConnect();
 $realUrl = createSearchUrl('real',1,3,'',0,999999999999,0,0);
 $first_page_data = fetchCacheUrl($realUrl,'search');
 $total_pages = intval($first_page_data->extractorData->data[0]->group[0]->{'Amount of Pages'}[0]->text);
-
+var_dump($total_pages);
 for($i = 1; $i <= $total_pages-40; $i++) { //take out the -40 later
     $page_number = $i;
     echo $i;
