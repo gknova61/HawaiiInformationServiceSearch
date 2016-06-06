@@ -14,7 +14,7 @@ External Libraries/Services Used:
 2. Signup for an account on [Import.io](https://www.import.io), and obtain an API key.
 3. Refer to [`/config/config.php`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/config/config.php) to input your API keys.
 4. Refer to [`/config/MySQLDBInfo.php`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/config/MySQLDBInfo.php) to input information to a MySQL Database (and MySQL user) for the program to use.
-6. Refer to the [`/mysql`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/mysql) folder for table setups within a schema. Run the [`/mysql/create_schema.sql`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/mysql/create_schema.sql) file, then the remaining ones to create the necessary tables
+6. Refer to the [`/mysql`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/mysql) folder for table setups within a schema. Run the [`/mysql/create_schema.sql`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/mysql/create_schema.sql) file first, then the remaining ones to create the necessary tables.
 
 The MySQL user only needs SELECT, INSERT, and DELETE privileges on the realEstateApp schema.
 
