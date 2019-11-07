@@ -1,5 +1,8 @@
 # HawaiiInformationServiceSearch
-An unofficial API for the HawaiiInformationService Real Estate Listings (a.k.a. AlohaLiving)
+An unofficial API for the HawaiiInformationService Real Estate Listings.
+
+## Objective:
+Perform advanced search on HawaiiInfnormationService Real Estate Listings (previously unavailable).
 
 External Libraries/Services Used:
 
@@ -9,7 +12,7 @@ External Libraries/Services Used:
 - [Orchestrate-php by socialnick](https://github.com/SocalNick/orchestrate-php-client) (PHP client library for Orchestrate.io)
 - [PHPUtils](https://github.com/gknova61/PHPUtils) (all around personal library)
 
-##Getting Started
+## Getting Started
 1. Signup for an account on [Orchestrate.io](https://orchestrate.io), create an app, and obtain an API key.
 2. Signup for an account on [Import.io](https://www.import.io), and obtain an API key.
 3. Refer to [`/config/config.php`](https://github.com/gknova61/HawaiiInformationServiceSearch/blob/master/config/config.php) to input your API keys.
